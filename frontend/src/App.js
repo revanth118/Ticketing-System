@@ -75,7 +75,7 @@ function TicketProvider({ children }) {
     currentPage: 1
   });
 
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+  const API_BASE = process.env.REACT_APP_API_URL || "https://ticketing-system-4r4u.onrender.com";
 
   const clearMessages = () => {
     dispatch({ type: 'CLEAR_MESSAGES' });
