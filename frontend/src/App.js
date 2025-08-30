@@ -940,7 +940,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   );
 }
 
-// Tickets Table Component
+// Responsive Tickets Display Component
 function TicketsTable({ onEditTicket }) {
   const {
     tickets,
@@ -987,13 +987,74 @@ function TicketsTable({ onEditTicket }) {
     }
   };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'open': return 'Open';
+      case 'inprogress': return 'In Progress';
+      case 'closed': return 'Closed';
+      default: return status;
+    }
+  };
+
   const truncateText = (text, maxLength = 100) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
 
+  // Mobile Card Component
+  const MobileTicketCard = ({ ticket, index }) => 
+    React.createElement('div', { className: 'card mb-3 border-start border-3', style: { borderColor: ticket.priority === 'high' ? '#dc3545' : ticket.priority === 'medium' ? '#ffc107' : '#198754' } },
+      React.createElement('div', { className: 'card-body p-3' },
+        React.createElement('div', { className: 'd-flex justify-content-between align-items-start mb-2' },
+          React.createElement('div', null,
+            React.createElement('h6', { className: 'card-title mb-1 fw-semibold' }, ticket.title),
+            React.createElement('small', { className: 'text-muted' }, `#${startIndex + index + 1} • ID: ${ticket.id}`)
+          ),
+          React.createElement('div', { className: 'd-flex gap-1' },
+            React.createElement('span', { className: `badge ${getPriorityBadge(ticket.priority)} badge-sm` },
+              ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)
+            )
+          )
+        ),
+        
+        React.createElement('p', { className: 'card-text text-muted mb-2', style: { fontSize: '0.875rem' } },
+          truncateText(ticket.description, 120)
+        ),
+        
+        React.createElement('div', { className: 'row align-items-center' },
+          React.createElement('div', { className: 'col-6' },
+            React.createElement('div', { className: 'd-flex align-items-center mb-1' },
+              getStatusIcon(ticket.status),
+              React.createElement('small', { className: 'ms-1' }, getStatusText(ticket.status))
+            ),
+            React.createElement('small', { className: 'text-muted' },
+              new Date(ticket.created_at).toLocaleDateString()
+            )
+          ),
+          React.createElement('div', { className: 'col-6 text-end' },
+            React.createElement('button', {
+              className: 'btn btn-outline-primary btn-sm',
+              onClick: () => onEditTicket(ticket)
+            },
+              React.createElement(Edit, { size: 14, className: 'me-1' }),
+              'Edit'
+            )
+          )
+        )
+      )
+    );
+
+  // Empty state component
+  const EmptyState = () =>
+    React.createElement('div', { className: 'text-center py-5' },
+      React.createElement(Ticket, { className: 'text-muted mb-3', size: 64 }),
+      React.createElement('h6', { className: 'text-muted' }, 'No tickets found'),
+      React.createElement('p', { className: 'text-muted mb-0' }, 'Try adjusting your search or filter criteria')
+    );
+
   return React.createElement('div', null,
-    React.createElement('div', { className: 'd-flex justify-content-between align-items-center mb-3' },
+    // Header with pagination controls
+    React.createElement('div', { className: 'd-flex justify-content-between align-items-center mb-3 flex-wrap gap-2' },
       React.createElement('div', null,
         React.createElement('span', { className: 'text-muted' },
           `Showing ${filteredTickets.length === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + itemsPerPage, filteredTickets.length)} of ${filteredTickets.length} tickets`
@@ -1017,85 +1078,92 @@ function TicketsTable({ onEditTicket }) {
       )
     ),
 
-    React.createElement('div', { className: 'table-responsive' },
-      React.createElement('table', { className: 'table table-hover' },
-        React.createElement('thead', { className: 'table-light' },
-          React.createElement('tr', null,
-            React.createElement('th', { scope: 'col', width: '5%' }, '#'),
-            React.createElement('th', { scope: 'col', width: '20%' }, 'Title'),
-            React.createElement('th', { scope: 'col', width: '30%' }, 'Description'),
-            React.createElement('th', { scope: 'col', width: '10%' }, 'Priority'),
-            React.createElement('th', { scope: 'col', width: '12%' }, 'Status'),
-            React.createElement('th', { scope: 'col', width: '13%' }, 'Created'),
-            React.createElement('th', { scope: 'col', width: '10%' }, 'Actions')
-          )
-        ),
-        React.createElement('tbody', null,
-          paginatedTickets.length === 0 ? 
+    // Desktop Table View (hidden on mobile)
+    React.createElement('div', { className: 'd-none d-lg-block' },
+      React.createElement('div', { className: 'table-responsive' },
+        React.createElement('table', { className: 'table table-hover' },
+          React.createElement('thead', { className: 'table-light' },
             React.createElement('tr', null,
-              React.createElement('td', { colSpan: '7', className: 'text-center py-4' },
-                React.createElement(Ticket, { className: 'text-muted mb-2', size: 48 }),
-                React.createElement('div', null, 'No tickets found'),
-                React.createElement('small', { className: 'text-muted' }, 'Try adjusting your search or filter criteria')
-              )
-            ) :
-            paginatedTickets.map((ticket, index) =>
-              React.createElement('tr', { key: ticket.id },
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('small', { className: 'text-muted' }, startIndex + index + 1)
-                ),
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('div', { className: 'fw-semibold' }, ticket.title),
-                  React.createElement('small', { className: 'text-muted' }, `ID: ${ticket.id}`)
-                ),
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('div', { title: ticket.description },
-                    truncateText(ticket.description)
-                  )
-                ),
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('span', { className: `badge ${getPriorityBadge(ticket.priority)}` },
-                    ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)
-                  )
-                ),
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('div', { className: 'd-flex align-items-center' },
-                    getStatusIcon(ticket.status),
-                    React.createElement('span', { className: 'ms-1' },
-                      ticket.status === 'open'
-                        ? 'Open'
-                        : ticket.status === 'inprogress'
-                        ? 'In Progress'
-                        : ticket.status === 'closed'
-                        ? 'Closed'
-                        : ticket.status
-                    )
-                  )
-                ),
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('div', { style: { fontSize: '0.875rem' } },
-                    new Date(ticket.created_at).toLocaleDateString()
+              React.createElement('th', { scope: 'col', width: '5%' }, '#'),
+              React.createElement('th', { scope: 'col', width: '20%' }, 'Title'),
+              React.createElement('th', { scope: 'col', width: '30%' }, 'Description'),
+              React.createElement('th', { scope: 'col', width: '10%' }, 'Priority'),
+              React.createElement('th', { scope: 'col', width: '12%' }, 'Status'),
+              React.createElement('th', { scope: 'col', width: '13%' }, 'Created'),
+              React.createElement('th', { scope: 'col', width: '10%' }, 'Actions')
+            )
+          ),
+          React.createElement('tbody', null,
+            paginatedTickets.length === 0 ? 
+              React.createElement('tr', null,
+                React.createElement('td', { colSpan: '7', className: 'text-center py-4' },
+                  React.createElement(EmptyState)
+                )
+              ) :
+              paginatedTickets.map((ticket, index) =>
+                React.createElement('tr', { key: ticket.id },
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('small', { className: 'text-muted' }, startIndex + index + 1)
                   ),
-                  React.createElement('small', { className: 'text-muted' },
-                    new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  )
-                ),
-                React.createElement('td', { className: 'align-middle' },
-                  React.createElement('button', {
-                    className: 'btn btn-outline-primary btn-sm d-flex align-items-center',
-                    onClick: () => onEditTicket(ticket),
-                    title: 'Edit ticket'
-                  },
-                    React.createElement(Edit, { size: 14, className: 'me-1' }),
-                    'Edit'
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('div', { className: 'fw-semibold' }, ticket.title),
+                    React.createElement('small', { className: 'text-muted' }, `ID: ${ticket.id}`)
+                  ),
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('div', { title: ticket.description },
+                      truncateText(ticket.description)
+                    )
+                  ),
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('span', { className: `badge ${getPriorityBadge(ticket.priority)}` },
+                      ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)
+                    )
+                  ),
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('div', { className: 'd-flex align-items-center' },
+                      getStatusIcon(ticket.status),
+                      React.createElement('span', { className: 'ms-1' }, getStatusText(ticket.status))
+                    )
+                  ),
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('div', { style: { fontSize: '0.875rem' } },
+                      new Date(ticket.created_at).toLocaleDateString()
+                    ),
+                    React.createElement('small', { className: 'text-muted' },
+                      new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    )
+                  ),
+                  React.createElement('td', { className: 'align-middle' },
+                    React.createElement('button', {
+                      className: 'btn btn-outline-primary btn-sm d-flex align-items-center',
+                      onClick: () => onEditTicket(ticket),
+                      title: 'Edit ticket'
+                    },
+                      React.createElement(Edit, { size: 14, className: 'me-1' }),
+                      'Edit'
+                    )
                   )
                 )
               )
-            )
+          )
         )
       )
     ),
 
+    // Mobile Card View (visible only on mobile)
+    React.createElement('div', { className: 'd-lg-none' },
+      paginatedTickets.length === 0 ?
+        React.createElement(EmptyState) :
+        paginatedTickets.map((ticket, index) =>
+          React.createElement(MobileTicketCard, { 
+            key: ticket.id, 
+            ticket, 
+            index 
+          })
+        )
+    ),
+
+    // Pagination
     React.createElement(Pagination, {
       currentPage,
       totalPages,
